@@ -1,30 +1,26 @@
 from os import listdir
 import matplotlib.pyplot as plt
 import pylab
-import datetime as dt
-from matplotlib.dates import date2num, DateFormatter
 import operator
 import numpy as np
 import sys
 
-
-"""
-This function returns string between first_tag and last_tag in text. It also
-returns changed text so that it will not include this string and tags.
-"""
 def clear_data(first_tag, last_lag, text):
+    """
+    This function returns string between first_tag and last_tag in text. It also
+    returns changed text so that it will not include this string and tags.
+    """
     first_index = text.find(first_tag) + len(first_tag)
     last_index = text.find(last_lag)
     result = text[first_index:last_index]
     text = text[last_index + len(last_lag):len(text)]
     return result, text
 
-
-"""
-This function makes a list of data from the html files of conversations,so
-that it would be easier to work with those data later.
-"""
 def messages_to_a_list():
+    """
+    This function makes a list of data from the html files of conversations,so
+    that it would be easier to work with those data later.
+    """
     chat_names = listdir(sys.argv[1] + "/messages")
     final_list = []
 
@@ -54,23 +50,21 @@ def messages_to_a_list():
 
     return final_list
 
-
-"""
-This function returns the full name of owner of the account.
-"""
 def identify_the_owner():
+    """
+    This function returns the full name of owner of the account.
+    """
     file = open(sys.argv[1] + "/index.htm")
     profile = file.read()
     file.close()
     result, profile = clear_data("<h1>", "</h1>", profile)
     return result
 
-
-"""
-This function counts all received and sent messages in every face to face
-conversation. Than it makes a bar chart from these data.
-"""
-def sent_vs_received_messages(data):
+def sent_vs_received_messages(data, number_of_results):
+    """
+    This function counts all received and sent messages in every face to face
+    conversation. Than it makes a bar chart from these data.
+    """
     final = []
     for conversation in data:
         print(conversation)
@@ -88,7 +82,7 @@ def sent_vs_received_messages(data):
     my_messages = []
     names = []
     others_messages = []
-    for i in range(20):
+    for i in range(number_of_results):
         print(i)
         names.append(final[i][0][0])
         my_messages.append(final[i][1])
@@ -119,12 +113,11 @@ def sent_vs_received_messages(data):
     pylab.savefig("sent_vs_received.png")
     plt.show()
 
-
-"""
-The function returns the list of all messages including certain word written
-by specified person.
-"""
 def count_word(data, word, person):
+    """
+    The function returns the list of all messages including certain word written
+    by specified person.
+    """
     word_number = 0
     for conversation in data:
         for message in conversation[1]:
@@ -134,12 +127,11 @@ def count_word(data, word, person):
                 word_number += 1
     return word_number
 
-
-"""
-The function counts all sent and received messages messages in every minute of
-a day. Than it makes a plot chart from those values.
-"""
 def messages_throughout_a_day(data):
+    """
+    The function counts all sent and received messages messages in every minute of
+    a day. Than it makes a plot chart from those values.
+    """
     my_daily_messages = [0] * 60 * 24
     others_daily_messages = [0] * 60 * 24
     for conversation in data:
@@ -171,14 +163,56 @@ def messages_throughout_a_day(data):
         '-r',
         label="Received messages")
     plt.legend(loc='upper left')
-    times = ["0:00", "3:00", "6:00", "9:00", "12:00", "15:00", "18:00", "21:00"]
+    times = [
+        "0:00",
+        "3:00",
+        "6:00",
+        "9:00",
+        "12:00",
+        "15:00",
+        "18:00",
+        "21:00"]
     plt.xticks([180 * i for i in range(8)], times)
     plt.xlim(0, 1440)
     plt.tight_layout()
     pylab.savefig("messages_throughout_a_day.png")
     plt.show()
 
+def men_vs_women(data):
+    """
+    This function counts all sent and received messages to men and women separately
+    and than it show results in a bar chart.
+    """
+    sent_to_women = 0
+    sent_to_men = 0
+    received_from_women = 0
+    received_from_men = 0
+    for conversation in data:
+        if len(conversation[0]) == 1:
+            for message in conversation[1]:
+                name = conversation[0][0]
+                if message[0] == identify_the_owner():
+                    if name[len(name) - 3:len(name)] == "ová":
+                        sent_to_women += 1
+                    else:
+                        sent_to_men += 1
+                else:
+                    if name[len(name) - 3:len(name)] == "ová":
+                        received_from_women += 1
+                    else:
+                        received_from_men += 1
+    plt.title("Exchanged messages with men and women")
+    plt.bar(np.arange(2), [sent_to_men, sent_to_women],
+            color='r', width=0.4, alpha=0.7, label="Sent messages")
+    plt.bar(np.arange(2) + 0.40, [received_from_men, received_from_women],
+            color='b', width=0.4, alpha=0.7, label="Received messages")
+    plt.legend(loc='upper left')
+    plt.xticks(np.arange(2) + 0.4, ["Men", "Women"])
+    pylab.savefig("men_vs_women.png")
+    plt.show()
 
-sent_vs_received_messages(messages_to_a_list())
+
+men_vs_women(messages_to_a_list())
+sent_vs_received_messages(messages_to_a_list(), 10)
 messages_throughout_a_day(messages_to_a_list())
-print(count_word(messages_to_a_list(), "sluníčko", identify_the_owner()))
+print(count_word(messages_to_a_list(), "koníč", identify_the_owner()))
