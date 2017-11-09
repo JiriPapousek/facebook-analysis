@@ -5,6 +5,7 @@ import operator
 import numpy as np
 import sys
 
+
 def clear_data(first_tag, last_lag, text):
     """
     This function returns string between first_tag and last_tag in text. It also
@@ -15,6 +16,7 @@ def clear_data(first_tag, last_lag, text):
     result = text[first_index:last_index]
     text = text[last_index + len(last_lag):len(text)]
     return result, text
+
 
 def messages_to_a_list():
     """
@@ -50,6 +52,7 @@ def messages_to_a_list():
 
     return final_list
 
+
 def identify_the_owner():
     """
     This function returns the full name of owner of the account.
@@ -59,6 +62,7 @@ def identify_the_owner():
     file.close()
     result, profile = clear_data("<h1>", "</h1>", profile)
     return result
+
 
 def sent_vs_received_messages(data, number_of_results):
     """
@@ -113,6 +117,7 @@ def sent_vs_received_messages(data, number_of_results):
     pylab.savefig("sent_vs_received.png")
     plt.show()
 
+
 def count_word(data, word, person):
     """
     The function returns the list of all messages including certain word written
@@ -127,7 +132,12 @@ def count_word(data, word, person):
                 word_number += 1
     return word_number
 
+
 def clear_time(str):
+    """
+    Takes plain time string as an argument and converts it to the list of
+    separated values.
+    """
     minutes = int(str[str.find(":") + 1:str.find(":") + 3])
     if str[str.find(":") - 2] != " ":
         hours = int(str[str.find(":") - 2:str.find(":")])
@@ -136,7 +146,8 @@ def clear_time(str):
     day = int(str[0:str.find(".")])
     month = str.split(" ")[1]
     year = int(str.split(" ")[2])
-    return [hours,minutes,day,month,year]
+    return [hours, minutes, day, month, year]
+
 
 def messages_throughout_a_day(data):
     """
@@ -183,6 +194,7 @@ def messages_throughout_a_day(data):
     pylab.savefig("messages_throughout_a_day.png")
     plt.show()
 
+
 def men_vs_women(data):
     """
     This function counts all sent and received messages to men and women separately
@@ -216,26 +228,35 @@ def men_vs_women(data):
     pylab.savefig("men_vs_women.png")
     plt.show()
 
-def who_starts_conversation(data,number_of_results):
+
+def who_starts_conversation(data, number_of_results):
     """
     This function creates the bar chart showing the rates of messages starting
     the conversation and compares them on base of who sent that message.
     """
     final = []
-    list_of_greetings = ["zdravíčko","ahoj","čau","čus","nazdar","nazdárek","dobrý den"]
+    list_of_greetings = [
+        "zdravíčko",
+        "ahoj",
+        "čau",
+        "čus",
+        "nazdar",
+        "nazdárek",
+        "dobrý den"]
     for conversation in data:
-        if len(conversation[0])==1:
-            final.append([conversation[0][0],0,0,0])
+        if len(conversation[0]) == 1:
+            final.append([conversation[0][0], 0, 0, 0])
             conversation[1] = conversation[1][::-1]
             previous_message = conversation[1][0]
             previous_time = clear_time(previous_message[1])
             previous_time = previous_time[2:len(previous_time)]
-            for i in range(1,len(conversation[1])):
+            for i in range(1, len(conversation[1])):
                 message = conversation[1][i]
                 time = clear_time(message[1])
                 time = time[2:len(time)]
-                if time[0]!=previous_time[0]:
-                    if time[1]!=previous_time[1] or time[2]!=previous_time[2] or (time[0]-previous_time[0])!=1:
+                if time[0] != previous_time[0]:
+                    if time[1] != previous_time[1] or time[2] != previous_time[2] or (
+                            time[0] - previous_time[0]) != 1:
                         if message[0] == identify_the_owner():
                             final[len(final) - 1][1] += 1
                         else:
@@ -243,7 +264,7 @@ def who_starts_conversation(data,number_of_results):
                         final[len(final) - 1][3] += 1
                     else:
                         for greeting in list_of_greetings:
-                            if message[2].lower().find(greeting)!=-1:
+                            if message[2].lower().find(greeting) != -1:
                                 if message[0] == identify_the_owner():
                                     final[len(final) - 1][1] += 1
                                 else:
@@ -260,15 +281,30 @@ def who_starts_conversation(data,number_of_results):
         them.append(final[i][2])
         names.append(final[i][0])
     plt.title("Who starts the conversation first")
-    plt.bar(np.arange(len(me)),me,width=0.4,alpha=0.7,color="r",label="Me")
-    plt.bar(np.arange(len(them))+0.4,them,width=0.4,alpha=0.7,color="b",label="Other person")
+    plt.bar(
+        np.arange(
+            len(me)),
+        me,
+        width=0.4,
+        alpha=0.7,
+        color="r",
+        label="Me")
+    plt.bar(
+        np.arange(
+            len(them)) + 0.4,
+        them,
+        width=0.4,
+        alpha=0.7,
+        color="b",
+        label="Other person")
     plt.legend()
-    plt.xticks(np.arange(len(names)), names, rotation = 45)
+    plt.xticks(np.arange(len(names)), names, rotation=45)
     plt.tight_layout()
     pylab.savefig("who_starts_the_conversation.png")
     plt.show()
 
-def messages_throughout_a_year(data,year):
+
+def messages_throughout_a_year(data, year):
     """
     This function counts all messages in year by month, than it shows them in
     a plot chart.
@@ -278,8 +314,8 @@ def messages_throughout_a_year(data,year):
     for conversation in data:
         for message in conversation[1]:
             time = clear_time(message[1])
-            if time[4]==year:
-                if message[0]==identify_the_owner():
+            if time[4] == year:
+                if message[0] == identify_the_owner():
                     if time[3] in months_my_messages:
                         months_my_messages[time[3]] += 1
                     else:
@@ -290,7 +326,19 @@ def messages_throughout_a_year(data,year):
                     else:
                         months_others_messages[time[3]] = 0
 
-    months = ["leden","únor","březen","duben","květen","červen","červenec","srpen","září","říjen","listopad","prosinec"]
+    months = [
+        "leden",
+        "únor",
+        "březen",
+        "duben",
+        "květen",
+        "červen",
+        "červenec",
+        "srpen",
+        "září",
+        "říjen",
+        "listopad",
+        "prosinec"]
 
     my_messages = []
     others_messages = []
@@ -306,16 +354,17 @@ def messages_throughout_a_year(data,year):
     print(my_messages)
     print(others_messages)
     plt.title("Sent and received messages by month in year " + str(year))
-    plt.plot(np.arange(12), my_messages,  color = "r", alpha = 0.7, label = "Me")
-    plt.plot(np.arange(12), others_messages, color = "b", alpha = 0.7, label = "Other person")
-    plt.xticks(np.arange(12), months, rotation = 45)
+    plt.plot(np.arange(12), my_messages, color="r", label="Me")
+    plt.plot(np.arange(12), others_messages, color="b", label="Other person")
+    plt.xticks(np.arange(12), months, rotation=45)
     plt.legend()
-    pylab.savefig("msgs_throughout_"+str(year)+".png")
+    pylab.savefig("msgs_throughout_" + str(year) + ".png")
     plt.show()
 
-messages_throughout_a_year(messages_to_a_list(),2010)
-#who_starts_conversation(messages_to_a_list(), 15)
-#men_vs_women(messages_to_a_list())
-#sent_vs_received_messages(messages_to_a_list(), 15)
-#messages_throughout_a_day(messages_to_a_list())
-#print(count_word(messages_to_a_list(), "tučňák", identify_the_owner()))
+
+messages_throughout_a_year(messages_to_a_list(), 2010)
+who_starts_conversation(messages_to_a_list(), 15)
+men_vs_women(messages_to_a_list())
+sent_vs_received_messages(messages_to_a_list(), 15)
+messages_throughout_a_day(messages_to_a_list())
+print(count_word(messages_to_a_list(), ":D", identify_the_owner()))
