@@ -30,7 +30,7 @@ def messages_to_a_list():
         file.close()
         conversation = conversation.split("<div class=\"message\">")
         people_in_conversation, conversation[0] = clear_data(
-            "Konverzace s&nbsp;", "</title>", conversation[0])
+            "Konverzace s ", "</title>", conversation[0])
         people_in_conversation = people_in_conversation.split(",")
         final_list.append([people_in_conversation, []])
         conversation.pop(0)
@@ -127,6 +127,17 @@ def count_word(data, word, person):
                 word_number += 1
     return word_number
 
+def clear_time(str):
+    minutes = int(str[str.find(":") + 1:str.find(":") + 3])
+    if str[str.find(":") - 2] != " ":
+        hours = int(str[str.find(":") - 2:str.find(":")])
+    else:
+        hours = int(str[str.find(":") - 1:str.find(":")])
+    day = int(str[0:str.find(".")])
+    month = str.split(" ")[1]
+    year = int(str.split(" ")[2])
+    return [hours,minutes,day,month,year]
+
 def messages_throughout_a_day(data):
     """
     The function counts all sent and received messages messages in every minute of
@@ -137,14 +148,8 @@ def messages_throughout_a_day(data):
     for conversation in data:
         if len(conversation[0]) == 1:
             for message in conversation[1]:
-                t = message[1]
-                minutes = int(t[t.find(":") + 1:t.find(":") + 3])
-                if t[t.find(":") - 2] != " ":
-                    hours = int(t[t.find(":") - 2:t.find(":")])
-                else:
-                    hours = int(t[t.find(":") - 1:t.find(":")])
-                time = 60 * hours + minutes
-
+                t = clear_time(message[1])
+                time = 60 * t[0] + t[1]
                 if message[0] == identify_the_owner():
                     my_daily_messages[time] += 1
                 else:
@@ -211,8 +216,95 @@ def men_vs_women(data):
     pylab.savefig("men_vs_women.png")
     plt.show()
 
+def who_starts_conversation(data,number_of_results):
+    """
+    This function creates the bar chart showing the rates of messages starting
+    the conversation and compares them on base of who sent that message.
+    """
+    final = []
+    list_of_greetings = ["zdravíčko","ahoj","čau","čus","nazdar","nazdárek","dobrý den"]
+    for conversation in data:
+        if len(conversation[0])==1:
+            final.append([conversation[0][0],0,0,0])
+            conversation[1] = conversation[1][::-1]
+            previous_message = conversation[1][0]
+            previous_time = clear_time(previous_message[1])
+            previous_time = previous_time[2:len(previous_time)]
+            for i in range(1,len(conversation[1])):
+                message = conversation[1][i]
+                time = clear_time(message[1])
+                time = time[2:len(time)]
+                if time[0]!=previous_time[0]:
+                    if time[1]!=previous_time[1] or time[2]!=previous_time[2] or (time[0]-previous_time[0])!=1:
+                        if message[0] == identify_the_owner():
+                            final[len(final) - 1][1] += 1
+                        else:
+                            final[len(final) - 1][2] += 1
+                        final[len(final) - 1][3] += 1
+                    else:
+                        for greeting in list_of_greetings:
+                            if message[2].lower().find(greeting)!=-1:
+                                if message[0] == identify_the_owner():
+                                    final[len(final) - 1][1] += 1
+                                else:
+                                    final[len(final) - 1][2] += 1
+                                final[len(final) - 1][3] += 1
+                previous_time = time
 
+    final = sorted(final, key=operator.itemgetter(3))[::-1]
+    me = []
+    them = []
+    names = []
+    for i in range(number_of_results):
+        me.append(final[i][1])
+        them.append(final[i][2])
+        names.append(final[i][0])
+    plt.title("Who starts the conversation first")
+    plt.bar(np.arange(len(me)),me,width=0.4,alpha=0.7,color="r",label="Me")
+    plt.bar(np.arange(len(them))+0.4,them,width=0.4,alpha=0.7,color="b",label="Other person")
+    plt.legend()
+    plt.xticks(np.arange(len(names)), names, rotation = 45)
+    plt.tight_layout()
+    pylab.savefig("who_starts_the_conversation.png")
+    plt.show()
+
+def messages_throughout_a_year(data,year):
+    months_my_messages = {}
+    months_others_messages = {}
+    for conversation in data:
+        for message in conversation[1]:
+            time = clear_time(message[1])
+            if time[4]==year:
+                if message[0]==identify_the_owner():
+                    if time[3] in months_my_messages:
+                        months_my_messages[time[3]] += 1
+                    else:
+                        months_my_messages[time[3]] = 0
+                else:
+                    if time[3] in months_others_messages:
+                        months_others_messages[time[3]] += 1
+                    else:
+                        months_others_messages[time[3]] = 0
+    print(months_my_messages)
+    print(months_others_messages)
+    months = ["leden","únor","březen","duben","květen","červen","červenec","srpen","září","říjen","listopad","prosinec"]
+
+    my_messages = []
+    others_messages = []
+    for month in months:
+        my_messages.append(months_my_messages[month])
+        others_messages.append(months_others_messages[month])
+
+    plt.title("Show sent and received messages by month")
+    plt.plot(np.arange(12), my_messages,  color = "r", alpha = 0.7, label = "Me")
+    plt.plot(np.arange(12), others_messages, color = "b", alpha = 0.7, label = "Other person")
+    plt.xticks(np.arange(12), months, rotation = 45)
+    plt.legend()
+    plt.show()
+
+messages_throughout_a_year(messages_to_a_list(),2016)
+who_starts_conversation(messages_to_a_list(), 15)
 men_vs_women(messages_to_a_list())
-sent_vs_received_messages(messages_to_a_list(), 10)
+sent_vs_received_messages(messages_to_a_list(), 15)
 messages_throughout_a_day(messages_to_a_list())
-print(count_word(messages_to_a_list(), "koníč", identify_the_owner()))
+print(count_word(messages_to_a_list(), "tučňák", identify_the_owner()))
