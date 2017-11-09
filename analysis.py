@@ -269,6 +269,10 @@ def who_starts_conversation(data,number_of_results):
     plt.show()
 
 def messages_throughout_a_year(data,year):
+    """
+    This function counts all messages in year by month, than it shows them in
+    a plot chart.
+    """
     months_my_messages = {}
     months_others_messages = {}
     for conversation in data:
@@ -285,26 +289,33 @@ def messages_throughout_a_year(data,year):
                         months_others_messages[time[3]] += 1
                     else:
                         months_others_messages[time[3]] = 0
-    print(months_my_messages)
-    print(months_others_messages)
+
     months = ["leden","únor","březen","duben","květen","červen","červenec","srpen","září","říjen","listopad","prosinec"]
 
     my_messages = []
     others_messages = []
     for month in months:
-        my_messages.append(months_my_messages[month])
-        others_messages.append(months_others_messages[month])
-
-    plt.title("Show sent and received messages by month")
+        if month in months_my_messages:
+            my_messages.append(months_my_messages[month])
+        else:
+            my_messages.append(0)
+        if month in months_others_messages:
+            others_messages.append(months_others_messages[month])
+        else:
+            others_messages.append(0)
+    print(my_messages)
+    print(others_messages)
+    plt.title("Sent and received messages by month in year " + str(year))
     plt.plot(np.arange(12), my_messages,  color = "r", alpha = 0.7, label = "Me")
     plt.plot(np.arange(12), others_messages, color = "b", alpha = 0.7, label = "Other person")
     plt.xticks(np.arange(12), months, rotation = 45)
     plt.legend()
+    pylab.savefig("msgs_throughout_"+str(year)+".png")
     plt.show()
 
-messages_throughout_a_year(messages_to_a_list(),2016)
-who_starts_conversation(messages_to_a_list(), 15)
-men_vs_women(messages_to_a_list())
-sent_vs_received_messages(messages_to_a_list(), 15)
-messages_throughout_a_day(messages_to_a_list())
-print(count_word(messages_to_a_list(), "tučňák", identify_the_owner()))
+messages_throughout_a_year(messages_to_a_list(),2010)
+#who_starts_conversation(messages_to_a_list(), 15)
+#men_vs_women(messages_to_a_list())
+#sent_vs_received_messages(messages_to_a_list(), 15)
+#messages_throughout_a_day(messages_to_a_list())
+#print(count_word(messages_to_a_list(), "tučňák", identify_the_owner()))
