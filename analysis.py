@@ -380,13 +380,13 @@ def show_msgs_throughout_a_year(data):
 
     color_lines = []
     for i in range(4):
-        color_lines.append(lt.plot(
+        color_lines.append(plt.plot(
             np.arange(12),
             sent[i],
             ls="solid",
             color=colors[i],
             alpha=0.8,
-            label=str(2014 +))[0])
+            label=str(2014 + i))[0])
         plt.plot(
             np.arange(12),
             received[i],
