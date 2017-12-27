@@ -33,7 +33,7 @@ def messages_to_a_list():
         file.close()
         conversation = conversation.split("<div class=\"message\">")
         people_in_conversation, conversation[0] = clear_data(
-            "Konverzace s ", "</title>", conversation[0])
+            "Konverzace s&nbsp;", "</title>", conversation[0])
         people_in_conversation = people_in_conversation.split(",")
         final_list.append([people_in_conversation, []])
         conversation.pop(0)
@@ -65,10 +65,10 @@ def identify_the_owner():
     return result
 
 
-def show_sent_vs_received_messages(data, number_of_results):
+def count_sent_vs_received_messsages(data, number_of_results):
     """
     This function counts all received and sent messages in every face to face
-    conversation. Than it makes a bar chart from these data.
+    conversation.
     """
     final = []
     for conversation in data:
@@ -82,32 +82,48 @@ def show_sent_vs_received_messages(data, number_of_results):
                     final[len(final) - 1][2] += 1
     final = sorted(final, key=operator.itemgetter(3))[::-1]
 
-    my_messages = []
     names = []
+    my_messages = []
     others_messages = []
     for i in range(number_of_results):
         names.append(final[i][0][0])
         my_messages.append(final[i][1])
         others_messages.append(final[i][2])
+    print(names)
+    print(my_messages)
+    print(others_messages)
+    return names, my_messages, others_messages
+
+def show_sent_vs_received_messages(data, number_of_results):
+    """
+    This function shows the top results of received and sent messages in
+    every face to face conversation in the bar chart.
+    """
+    result = count_sent_vs_received_messsages(data, number_of_results)
+    names = result[0]
+    my_messages = result[1]
+    others_messages = result[2]
 
     plt.figure(figsize=(10, 6))
     plt.title("Sent and received messages in the most used conversations")
     plt.bar(
-        np.arange(len(names)),
+        np.arange(len(my_messages)),
         my_messages,
         width=0.4,
-        color='r',
+        align='edge',
         alpha=0.7,
+        color='r',
         label="Sent messages")
     plt.bar(
-        np.arange(len(names)) + 0.4,
+        np.arange(len(others_messages)) + 0.4,
         others_messages,
         width=0.4,
-        color='b',
+        align='edge',
         alpha=0.7,
+        color='b',
         label="Received messages")
     plt.legend()
-    plt.xticks(np.arange(len(names)), names, rotation=70)
+    plt.xticks(np.arange(len(names))+0.4, names, rotation=90)
     plt.ylabel("Number of messages")
     plt.xlim(0, number_of_results)
     plt.tight_layout()
@@ -145,11 +161,10 @@ def clear_time(str):
     year = int(str.split(" ")[2])
     return [hours, minutes, day, month, year]
 
-
-def show_messages_throughout_a_day(data):
+def count_messages_throughout_a_day(data):
     """
-    The function counts all sent and received messages messages in every minute of
-    a day. Than it makes a plot chart from those values.
+    The function counts all sent and received messages messages in every
+    minute of a day.
     """
     my_daily_messages = [0] * 60 * 24
     others_daily_messages = [0] * 60 * 24
@@ -162,6 +177,16 @@ def show_messages_throughout_a_day(data):
                     my_daily_messages[time] += 1
                 else:
                     others_daily_messages[time] += 1
+    return my_daily_messages, others_daily_messages
+
+def show_messages_throughout_a_day(data):
+    """
+    The function shows all sent and received messages messages in every
+    minute of a day in a plot chart.
+    """
+    result = count_messages_throughout_a_day(data)
+    my_daily_messages = result[0]
+    others_daily_messages = result[1]
 
     plt.figure(figsize=(10, 6))
     plt.title("Sent and received messages throughout a day")
@@ -195,11 +220,10 @@ def show_messages_throughout_a_day(data):
     pylab.savefig("messages_throughout_a_day.png")
     plt.show()
 
-
-def show_men_vs_women(data):
+def count_men_vs_women(data):
     """
     This function counts all sent and received messages to men and women
-    separately and than it show results in a bar chart.
+    separately.
     """
     sent_to_women = 0
     sent_to_men = 0
@@ -219,6 +243,19 @@ def show_men_vs_women(data):
                         received_from_women += 1
                     else:
                         received_from_men += 1
+    return sent_to_men, sent_to_women, received_from_men, received_from_women
+
+def show_men_vs_women(data):
+    """
+    This function shows all sent and received messages to men and women
+    separately in the bar chart.
+    """
+
+    result = count_men_vs_women(data)
+    sent_to_men = result[0]
+    sent_to_women = result[1]
+    received_from_men = result[2]
+    received_from_women = result[3]
 
     plt.figure(figsize=(10, 6))
     plt.title("Exchanged messages with men and women")
@@ -227,16 +264,15 @@ def show_men_vs_women(data):
     plt.bar(np.arange(2) + 0.40, [received_from_men, received_from_women],
             color='b', width=0.4, alpha=0.7, label="Received messages")
     plt.legend(loc='upper left')
-    plt.xticks(np.arange(2) + 0.4, ["Men", "Women"])
+    plt.xticks(np.arange(2)+0.2, ["Men", "Women"])
     plt.ylabel("Number of messages")
     pylab.savefig("men_vs_women.png")
     plt.show()
 
-
-def show_who_starts_conversation(data, number_of_results):
+def count_who_starts_conversation(data, number_of_results):
     """
-    This function creates the bar chart showing the rates of messages starting
-    the conversation and compares them on base of who sent that message.
+    This function counts the messages starting conversations sent by me vs.
+    those sent by someone else.
     """
     final = []
     list_of_greetings = [
@@ -253,14 +289,12 @@ def show_who_starts_conversation(data, number_of_results):
             conversation[1] = conversation[1][::-1]
             previous_message = conversation[1][0]
             previous_time = clear_time(previous_message[1])
-            previous_time = previous_time[2:len(previous_time)]
             for i in range(1, len(conversation[1])):
                 message = conversation[1][i]
                 time = clear_time(message[1])
-                time = time[2:len(time)]
-                if time[0] != previous_time[0]:
-                    if time[1] != previous_time[1] or time[2] != previous_time[2] or (
-                            time[0] - previous_time[0]) != 1:
+                if time[2] != previous_time[2]:
+                    if time[3] != previous_time[3] or time[4] != previous_time[4] or (
+                            time[2] - previous_time[2]) != 1:
                         if message[0] == identify_the_owner():
                             final[len(final) - 1][1] += 1
                         else:
@@ -277,13 +311,24 @@ def show_who_starts_conversation(data, number_of_results):
                 previous_time = time
 
     final = sorted(final, key=operator.itemgetter(3))[::-1]
+    names = []
     me = []
     them = []
-    names = []
     for i in range(number_of_results):
+        names.append(final[i][0] + " ")
         me.append(final[i][1])
         them.append(final[i][2])
-        names.append(final[i][0] + " ")
+    return names, me, them
+
+def show_who_starts_conversation(data, number_of_results):
+    """
+    This function creates the bar chart showing the rates of messages starting
+    the conversation compared on basis of who sent that message.
+    """
+    result = count_who_starts_conversation(data, number_of_results)
+    names = result[0]
+    me = result[1]
+    them = result[2]
 
     plt.figure(figsize=(10, 6))
     plt.title("Who starts the conversation first")
@@ -304,7 +349,7 @@ def show_who_starts_conversation(data, number_of_results):
         color="b",
         label="Other person")
     plt.legend()
-    plt.xticks(np.arange(len(names)), names, rotation=70)
+    plt.xticks(np.arange(len(names))+0.4, names, rotation=90)
     plt.ylabel("Number of openings")
     plt.xlim(0, number_of_results)
     plt.tight_layout()
